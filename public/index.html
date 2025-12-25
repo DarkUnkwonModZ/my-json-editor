@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Config Editor</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #222; color: #fff; }
+    textarea { width: 100%; height: 80vh; background: #111; color: #0f0; font-family: monospace; }
+    button { margin-top: 10px; padding: 10px 20px; background: #008000; color: white; border: none; cursor: pointer; }
+    .status { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>🛡️ Security Config Editor</h2>
+  <p>Raw URL: <a href="/config.json" target="_blank">https://your-project.vercel.app/config.json</a></p>
+  <textarea id="editor"></textarea><br>
+  <button onclick="load()">Load</button>
+  <button onclick="save()">Save to GitHub</button>
+  <div class="status" id="status"></div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    async function load() {
+      const res = await fetch('/config.json');
+      const text = await res.text();
+      document.getElementById('editor').value = text;
+    }
+    async function save() {
+      statusEl.textContent = "Saving...";
+      statusEl.style.color = "yellow";
+      try {
+        const json = document.getElementById('editor').value;
+        const res = await fetch('/api/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: json
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusEl.textContent = "✅ Saved! JSON updated on GitHub.";
+          statusEl.style.color = "lime";
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (err) {
+        statusEl.textContent = "❌ Error: " + err.message;
+        statusEl.style.color = "red";
+      }
+    }
+    load();
+  </script>
+</body>
+</html>
